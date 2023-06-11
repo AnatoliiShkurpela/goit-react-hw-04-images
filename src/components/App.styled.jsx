@@ -1,6 +1,6 @@
 import styled from 'styled-components';
 /*
- * Стили компонента App
+ * Стилi компонента App
  */
 export const Wrapper = styled.div`
   display: grid;

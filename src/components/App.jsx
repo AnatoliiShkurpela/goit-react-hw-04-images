@@ -1,4 +1,4 @@
-import React, { Component } from 'react';
+import React, { useState } from 'react';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { Wrapper } from './App.styled';
@@ -7,15 +7,13 @@ import { Searchbar } from 'components/searchbar/Searchbar';
 import { ImageGallery } from 'components/imageGallery/ImageGallery';
 import { Modal } from 'components/modal/Modal';
 
-export class App extends Component {
-  state = {
-    searchQuery: '',
-    isShowModal: false,
-    modalImage: '',
-  };
+export function App() {
+  const [searchQuery, setSearchQuery] = useState('');
+  const [isShowModal, setIsShowModal] = useState(false);
+  const [modalImage, setModalImage] = useState('');
 
-  handleFormSubmit = searchQuery => {
-    this.setState({ searchQuery });
+  const handleFormSubmit = searchQuery => {
+    setSearchQuery(searchQuery);
   };
 
   showModal = largeImageURL => {
