@@ -16,30 +16,21 @@ export function App() {
     setSearchQuery(searchQuery);
   };
 
-  showModal = largeImageURL => {
-    this.setState({ isShowModal: true, modalImage: largeImageURL });
+  const showModal = largeImageURL => {
+    setIsShowModal(true);
+    setModalImage(largeImageURL);
   };
 
-  closeModal = () => {
-    this.setState({ isShowModal: false });
+  const closeModal = () => {
+    setIsShowModal(false);
   };
 
-  render() {
-    return (
-      <Wrapper>
-        <Searchbar onSubmit={this.handleFormSubmit} />
-        <ImageGallery
-          showModal={this.showModal}
-          searchQuery={this.state.searchQuery}
-        />
-        {this.state.isShowModal && (
-          <Modal
-            closeModal={this.closeModal}
-            modalImage={this.state.modalImage}
-          />
-        )}
-        <ToastContainer autoClose={3000} theme="colored" />
-      </Wrapper>
-    );
-  }
+  return (
+    <Wrapper>
+      <Searchbar onSubmit={handleFormSubmit} />
+      <ImageGallery showModal={showModal} searchQuery={searchQuery} />
+      {isShowModal && <Modal closeModal={closeModal} modalImage={modalImage} />}
+      <ToastContainer autoClose={3000} theme="colored" />
+    </Wrapper>
+  );
 }
