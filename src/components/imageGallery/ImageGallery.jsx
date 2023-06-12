@@ -1,4 +1,4 @@
-import React, { Component } from 'react';
+import React, { useEffect, useState } from 'react';
 import PropTypes from 'prop-types';
 import { toast } from 'react-toastify';
 import { ImageGalleryItem } from 'components/imageGalleryItem/ImageGalleryItem';
@@ -7,91 +7,76 @@ import { Button } from 'components/button/Button';
 import { ImageGalleryUl, Container } from './ImageGallery.styled';
 import { fetchGalleryImg } from '../../Api/fetchGalleryImg';
 
-export class ImageGallery extends Component {
-  state = {
-    images: null,
-    loading: false,
-    page: 1,
-    hiddenBnt: false,
-  };
+export function ImageGallery({ showModal, searchQuery }) {
+  const [query, setQuery] = useState('');
+  const [images, setImages] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [page, setPage] = useState(1);
+  const [isVisibleButton, setIsVisibleButton] = useState(true);
 
-  onFindMore = () => {
-    this.setState(prevState => ({
-      page: prevState.page + 1,
-      loading: true,
-      hiddenBnt: false,
-    }));
-
-    // Микрозадача => в макрозадачу
-    // setTimeout(() => {
-      fetchGalleryImg(this.props.searchQuery, this.state.page + 1)
-        .then(({ hits, totalHits }) => {
-          if (hits.length === 0) {
-            toast.error(
-              'Sorry, there are no more images matching your search query. Please try again.'
-            );
-            this.setState({ hiddenBnt: true });
-          } else
-            this.setState(prevState => ({
-              images: [...prevState.images, ...hits],
-            }));
-          if (12 * this.state.page > totalHits) {
-            this.setState({ hiddenBnt: true });
-            toast.error(
-              'Sorry, there are no more images matching your search query.'
-            );
-          }
-        })
-        .catch(error => this.setState({ error }))
-        .finally(() => this.setState({ loading: false }));
-    // });
-  };
-
-  componentDidUpdate(prevProps, prevState) {
-    if (prevProps.searchQuery !== this.props.searchQuery) {
-      this.setState({ loading: true, images: null, page: 1, hiddenBnt: false });
-
-      // Микрозадача => в макрозадачу
-      setTimeout(() => {
-        fetchGalleryImg(this.props.searchQuery, this.state.page)
-          .then(({ hits }) => {
-            if (hits.length === 0) {
-              toast.error(
-                'Sorry, there are no images matching your search query. Please try again.'
-              );
-            } else this.setState({ images: hits });
-          })
-          .catch(error => this.setState({ error }))
-          .finally(() => this.setState({ loading: false }));
-      });
+  useEffect(() => {
+    if (searchQuery === '') {
+      return;
     }
-  }
+    if (searchQuery !== query) {
+      setQuery(searchQuery);
+      setImages([]);
+      setPage(1);
+      setIsVisibleButton(true);
+    }
 
-  render() {
-    return (
-      <Container>
-        {this.state.loading && <Loader />}
+    getImages(searchQuery, page);
+  }, [searchQuery, page]);
 
-        {this.state.images && (
-          <ImageGalleryUl>
-            {this.state.images.map(image => {
-              return (
-                <ImageGalleryItem
-                  showModal={() => this.props.showModal(image.largeImageURL)}
-                  key={image.id}
-                  smallImg={image.webformatURL}
-                  alt={image.tags}
-                />
-              );
-            })}
-          </ImageGalleryUl>
-        )}
-        {this.state.images && this.state.hiddenBnt === false && (
-          <Button onFindMore={() => this.onFindMore()} />
-        )}
-      </Container>
-    );
-  }
+  const showErrorMsg = () => {
+    toast.error('Sorry, there are no more images matching your search query.');
+  };
+
+  const onFindMore = () => {
+    setPage(prevPage => prevPage + 1);
+  };
+
+  const getImages = (searchQuery, page) => {
+    setLoading(true);
+    fetchGalleryImg(searchQuery, page)
+      .then(({ hits, totalHits }) => {
+        if (hits.length === 0) {
+          showErrorMsg();
+          setIsVisibleButton(true);
+        } else {
+          setImages(prevImages => [...prevImages, ...hits]);
+          setIsVisibleButton(false);
+          if (12 * page > totalHits) {
+            showErrorMsg();
+            setIsVisibleButton(true);
+          }
+        }
+      })
+      .catch(error => error)
+      .finally(() => setLoading(false));
+  };
+
+  return (
+    <Container>
+      {loading && <Loader />}
+
+      {images && (
+        <ImageGalleryUl>
+          {images.map(image => {
+            return (
+              <ImageGalleryItem
+                key={image.id}
+                smallImg={image.webformatURL}
+                alt={image.tags}
+                showModal={() => showModal(image.largeImageURL)}
+              />
+            );
+          })}
+        </ImageGalleryUl>
+      )}
+      {!isVisibleButton && <Button onFindMore={onFindMore} />}
+    </Container>
+  );
 }
 
 ImageGallery.propTypes = {
